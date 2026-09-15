@@ -3,6 +3,11 @@
     // - Instead of replace(stuff, None), just use stuff.take()
     // - Instead of {None => None, Some(x) => Some(y)} we can use functional programming map() and closure. We don't need to ret Some(y), just map x -> y directly
     // If it is pointy, it is generic
+    // There are 3 types of iterator: IntoIter => consumed/moved elements, cannot use after, "yield" T
+    //                                  IterMut => borrow mutably, can used after, "yield" &mut T
+    //                                  Iter => borrow shared, can used after, "yield" &T
+
+    // Impl an iterator means defining struct to keep track of collection state being iterated
 use std::mem;
 
 pub struct List<T> {
@@ -16,6 +21,8 @@ struct Node<T> {
     elem: T,
     next: Link<T>,
 }
+
+pub struct IntoIter<T>(List<T>); // wrap around List and consume it
 
 impl<T> List<T> {
     pub fn new() -> Self {
@@ -52,6 +59,18 @@ impl<T> List<T> {
                 &mut node.elem
             }
         )
+    }
+
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        //access fields of a tuple struct numerically
+        self.0.pop() // pop the list (list is field 0)
     }
 }
 
@@ -105,6 +124,18 @@ mod test {
         });
         assert_eq!(list.peek(), Some(&33));
         assert_eq!(list.pop(), Some(33));
+    }
+
+    #[test]
+    fn into_iter() {
+        let mut list = List::new();
+        list.push(1); list.push(2); list.push(3);
+
+        let mut iter = list.into_iter();
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), None);
     }
 
 }

@@ -1,3 +1,7 @@
+// Notes:
+// Option comes with some default method that is quite useful:
+    // - Instead of replace(stuff, None), just use stuff.take()
+    // - Instead of {None => None, Some(x) => Some(y)} we can use functional programming map() and closure. We don't need to ret Some(y), just map x -> y directly
 use std::mem;
 
 pub struct List {
@@ -20,30 +24,27 @@ impl List {
     pub fn push(&mut self, value: i32) {
         let new_node = Box::new(Node {
             elem: value,
-            next: mem::replace(&mut self.head, None),
+            next: self.head.take(),
         });
 
         self.head = Some(new_node);
     }
 
     pub fn pop(&mut self) -> Option<i32> {
-        match mem::replace(&mut self.head, None) {
-            None => None,
-            Some(node) => {
-                self.head = node.next;
-                Some(node.elem)
-            }
-        }
+        self.head.take().map(|node| {
+            self.head = node.next;
+            node.elem
+        })
     }
 }
 
 impl Drop for List {
     fn drop(&mut self) {
-        let mut curr_link = mem::replace(&mut self.head, None);
+        let mut curr_link = self.head.take();
         while let Some(mut boxed_node) = curr_link {
-            curr_link = mem::replace(&mut boxed_node.next, None);
+            curr_link = mem::take(&mut boxed_node.next);
             // matched boxed_node is no longer used here, so it will be out of scope and get dropped
-            // but it's 'next' field have been set to Empty using replace above
+            // but it's 'next' field have been set to Empty using take above
             // therefore no unbound recursion would happen here
         }
     }

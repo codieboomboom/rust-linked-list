@@ -2,26 +2,27 @@
 // Option comes with some default method that is quite useful:
     // - Instead of replace(stuff, None), just use stuff.take()
     // - Instead of {None => None, Some(x) => Some(y)} we can use functional programming map() and closure. We don't need to ret Some(y), just map x -> y directly
+    // If it is pointy, it is generic
 use std::mem;
 
-pub struct List {
-    head: Link,
+pub struct List<T> {
+    head: Link<T>,
 }
 
 // Either empty (null) or a ptr to next Node
-type Link = Option<Box<Node>>; // type alias Link to Option of Box<Node>
+type Link<T> = Option<Box<Node<T>>>; // type alias Link to Option of Box<Node>
 
-struct Node {
-    elem: i32,
-    next: Link,
+struct Node<T> {
+    elem: T,
+    next: Link<T>,
 }
 
-impl List {
+impl<T> List<T> {
     pub fn new() -> Self {
         List { head: None }
     }
 
-    pub fn push(&mut self, value: i32) {
+    pub fn push(&mut self, value: T) {
         let new_node = Box::new(Node {
             elem: value,
             next: self.head.take(),
@@ -30,7 +31,7 @@ impl List {
         self.head = Some(new_node);
     }
 
-    pub fn pop(&mut self) -> Option<i32> {
+    pub fn pop(&mut self) -> Option<T> {
         self.head.take().map(|node| {
             self.head = node.next;
             node.elem
@@ -38,7 +39,7 @@ impl List {
     }
 }
 
-impl Drop for List {
+impl<T> Drop for List<T> {
     fn drop(&mut self) {
         let mut curr_link = self.head.take();
         while let Some(mut boxed_node) = curr_link {

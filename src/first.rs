@@ -1,3 +1,8 @@
+// This is our first implementation of a linked list in Rust. To be exact, we implement a stack here (first in last out)
+// What I have learnt:
+    // usage of std::mem::replace
+    // matching &mut blah blah might or might not require moving, if need moving then must match to replace instead
+    // while let matching pattern
 use std::mem;
 
 pub struct List {
@@ -36,6 +41,18 @@ impl List {
                 self.head = node.next;
                 Some(node.elem)
             }
+        }
+    }
+}
+
+impl Drop for List {
+    fn drop(&mut self) {
+        let mut curr_link = mem::replace(&mut self.head, Link::Empty);
+        while let Link::More(mut boxed_node) = curr_link {
+            curr_link = mem::replace(&mut boxed_node.next, Link::Empty);
+            // matched boxed_node is no longer used here, so it will be out of scope and get dropped
+            // but it's 'next' field have been set to Empty using replace above
+            // therefore no unbound recursion would happen here
         }
     }
 }

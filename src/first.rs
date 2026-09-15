@@ -10,6 +10,7 @@ pub struct List {
 }
 
 // Either empty (null) or a ptr to next Node
+// Retrospective: This is reinventing an 'Option' which is itself an enum to convey Some and None
 enum Link {
     Empty,
     More(Box<Node>),
